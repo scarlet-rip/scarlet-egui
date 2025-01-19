@@ -847,7 +847,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "57397d16646700483b67d2dd6511d79318f9d057fdbd21a4066aeac8b41d310a"
 
 [[package]]
-name = "scarlet-frame"
+name = "scarlet-egui"
 version = "0.0.0"
 dependencies = [
  "egui",

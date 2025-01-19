@@ -1,16 +1,14 @@
-use crate::egui::WidgetState;
+use crate::widget_state::WidgetState;
 use egui::{
     pos2, vec2, Color32, ColorImage, Context, Rect, TextureFilter, TextureHandle, TextureOptions,
     Ui, Vec2,
 };
 use image::GenericImageView;
 
-// Standard for 9slice
-// texture_size should be divided by this to find the border size
-pub(crate) const SLICE_9_BORDER_SIZE_FROM_TEXTURE_SIZE_CONVERSION_FACTOR: f32 = 4.0;
+pub(crate) const NINE_SLICE_BORDER_SIZE_FROM_TEXTURE_SIZE_CONVERSION_FACTOR: f32 = 4.0;
 
 #[derive(Clone)]
-pub(crate) struct Slice9State {
+pub(crate) struct NineSliceCache {
     pub texture: TextureHandle,
     pub uvs: Vec<Rect>,
     pub destinations: Vec<Rect>,
@@ -18,19 +16,19 @@ pub(crate) struct Slice9State {
     pub is_dirty: bool,
 }
 
-impl WidgetState for Slice9State {}
+impl WidgetState for NineSliceCache {}
 
-impl Slice9State {
-    pub fn from_texture(ui: &Ui, texture_file_path: &str, target_area: Rect) -> Slice9State {
-        let texture = load_9slice_texture(ui.ctx(), texture_file_path);
+impl NineSliceCache {
+    pub fn from_texture(ui: &Ui, texture_file_path: &str, target_area: Rect) -> NineSliceCache {
+        let texture = load_nine_slice_texture(ui.ctx(), texture_file_path);
 
         let texture_size = texture.size_vec2();
-        let border_size = texture_size / SLICE_9_BORDER_SIZE_FROM_TEXTURE_SIZE_CONVERSION_FACTOR;
+        let border_size = texture_size / NINE_SLICE_BORDER_SIZE_FROM_TEXTURE_SIZE_CONVERSION_FACTOR;
 
-        let uvs = calculate_9slice_uvs(&texture_size, &border_size);
-        let destinations = calculate_9slice_destinations(&target_area, &border_size);
+        let uvs = calculate_nine_slice_uvs(&texture_size, &border_size);
+        let destinations = calculate_nine_slice_destinations(&target_area, &border_size);
 
-        Slice9State {
+        NineSliceCache {
             texture,
             uvs,
             destinations,
@@ -39,7 +37,7 @@ impl Slice9State {
     }
 }
 
-pub(crate) fn draw_9slice(
+pub(crate) fn draw_nine_slice(
     ui: &Ui,
     texture: &TextureHandle,
     uvs: &[Rect],
@@ -56,7 +54,7 @@ pub(crate) fn draw_9slice(
     }
 }
 
-pub(crate) fn load_9slice_texture(ctx: &Context, file_path: &str) -> TextureHandle {
+pub(crate) fn load_nine_slice_texture(ctx: &Context, file_path: &str) -> TextureHandle {
     let image = image::open(file_path).expect("Failed to open image");
     let (width, height) = image.dimensions();
 
@@ -78,7 +76,7 @@ pub(crate) fn load_9slice_texture(ctx: &Context, file_path: &str) -> TextureHand
     ctx.load_texture(file_path, color_image, texture_options)
 }
 
-pub(crate) fn calculate_9slice_uvs(texture_size: &Vec2, border_size: &Vec2) -> Vec<Rect> {
+pub(crate) fn calculate_nine_slice_uvs(texture_size: &Vec2, border_size: &Vec2) -> Vec<Rect> {
     vec![
         // Top-left
         Rect::from_min_max(
@@ -152,7 +150,10 @@ pub(crate) fn calculate_9slice_uvs(texture_size: &Vec2, border_size: &Vec2) -> V
     ]
 }
 
-pub(crate) fn calculate_9slice_destinations(target_area: &Rect, border_size: &Vec2) -> Vec<Rect> {
+pub(crate) fn calculate_nine_slice_destinations(
+    target_area: &Rect,
+    border_size: &Vec2,
+) -> Vec<Rect> {
     vec![
         Rect::from_min_max(
             target_area.min,
