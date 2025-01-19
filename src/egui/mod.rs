@@ -1,5 +1,5 @@
 mod group;
-pub(crate) use group::Group;
+pub use group::Group;
 
 use egui::{Id, Ui};
 use std::marker::{Send, Sync};

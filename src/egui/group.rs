@@ -4,7 +4,7 @@ use crate::{
 };
 use egui::{Color32, Frame, Response, Stroke, Ui};
 
-pub(crate) struct Group<'a> {
+pub struct Group<'a> {
     id_salt: &'a str,
     texture_file_path: &'a str,
 }
@@ -44,7 +44,8 @@ impl<'a> Group<'a> {
             .response;
 
         if slice9_cache.is_dirty {
-            slice9_cache = Slice9State::from_texture(ui, self.texture_file_path, frame_response.rect);
+            slice9_cache =
+                Slice9State::from_texture(ui, self.texture_file_path, frame_response.rect);
         }
 
         slice9_cache.save_state(ui, self.id_salt);
