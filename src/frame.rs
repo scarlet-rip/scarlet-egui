@@ -11,6 +11,7 @@ pub struct Frame<'a> {
     texture_file_path: &'a str,
     tint: Option<Color32>,
     inner_frame: EguiFrame,
+    is_inner_frame_transparent: bool,
 }
 
 impl<'a> Frame<'a> {
@@ -20,6 +21,7 @@ impl<'a> Frame<'a> {
             texture_file_path,
             tint: None,
             inner_frame: EguiFrame::none(),
+            is_inner_frame_transparent: true,
         }
     }
 
@@ -40,11 +42,17 @@ impl<'a> Frame<'a> {
         let border_size = nine_slice_cache.texture.size_vec2()
             / NINE_SLICE_BORDER_SIZE_FROM_TEXTURE_SIZE_CONVERSION_FACTOR;
 
-        let frame_response = self
-            .inner_frame
-            .fill(Color32::TRANSPARENT)
-            .stroke(Stroke::new(0.0, Color32::TRANSPARENT))
-            .inner_margin(egui::Margin::symmetric(border_size.x, border_size.y))
+        let mut frame = self.inner_frame.inner_margin(
+            self.inner_frame.inner_margin + egui::Margin::symmetric(border_size.x, border_size.y),
+        );
+
+        if self.is_inner_frame_transparent {
+            frame = frame
+                .fill(Color32::TRANSPARENT)
+                .stroke(Stroke::new(0.0, Color32::TRANSPARENT))
+        }
+
+        let frame_response = frame
             .show(ui, |ui| {
                 content(ui);
             })
@@ -72,8 +80,14 @@ impl<'a> Frame<'a> {
         self
     }
 
-    pub fn edit_inner_frame(mut self, inner_frame: impl FnOnce(&mut EguiFrame)) -> Self {
-        inner_frame(&mut self.inner_frame);
+    pub fn transparent_inner_frame(mut self, is_transparent: bool) -> Self {
+        self.is_inner_frame_transparent = is_transparent;
+
+        self
+    }
+
+    pub fn edit_inner_frame(mut self, inner_frame: impl FnOnce(EguiFrame) -> EguiFrame) -> Self {
+        self.inner_frame = inner_frame(self.inner_frame);
 
         self
     }
