@@ -10,7 +10,7 @@ pub struct Frame<'a> {
     id_salt: Option<&'a str>,
     texture_file_path: &'a str,
     tint: Option<Color32>,
-    inner_frame: Option<EguiFrame>,
+    inner_frame: EguiFrame,
 }
 
 impl<'a> Frame<'a> {
@@ -19,7 +19,7 @@ impl<'a> Frame<'a> {
             id_salt: None,
             texture_file_path,
             tint: None,
-            inner_frame: None,
+            inner_frame: EguiFrame::none(),
         }
     }
 
@@ -40,13 +40,8 @@ impl<'a> Frame<'a> {
         let border_size = nine_slice_cache.texture.size_vec2()
             / NINE_SLICE_BORDER_SIZE_FROM_TEXTURE_SIZE_CONVERSION_FACTOR;
 
-        let inner_frame = if let Some(inner_frame) = self.inner_frame {
-            inner_frame
-        } else {
-            EguiFrame::none()
-        };
-
-        let frame_response = inner_frame
+        let frame_response = self
+            .inner_frame
             .fill(Color32::TRANSPARENT)
             .stroke(Stroke::new(0.0, Color32::TRANSPARENT))
             .inner_margin(egui::Margin::symmetric(border_size.x, border_size.y))
@@ -73,6 +68,12 @@ impl<'a> Frame<'a> {
 
     pub fn tint(mut self, tint: Color32) -> Self {
         self.tint = Some(tint);
+
+        self
+    }
+
+    pub fn edit_inner_frame(mut self, inner_frame: impl FnOnce(&mut EguiFrame)) -> Self {
+        inner_frame(&mut self.inner_frame);
 
         self
     }
