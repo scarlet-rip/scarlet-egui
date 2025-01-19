@@ -56,4 +56,16 @@ impl<'a> Frame<'a> {
 
         frame_response
     }
+
+    pub fn id_salt(mut self, id_salt: &'a str) -> Self {
+        self.id_salt = Some(id_salt);
+
+        self
+    }
+
+    pub fn tint(mut self, tint: Color32) -> Self {
+        self.tint = Some(tint);
+
+        self
+    }
 }
