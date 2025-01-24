@@ -1,7 +1,7 @@
 use crate::widget_state::WidgetState;
 use egui::{
-    pos2, vec2, Color32, ColorImage, Context, Rect, TextureFilter, TextureHandle, TextureOptions,
-    Ui, Vec2,
+    pos2, vec2, ColorImage, Context, Rect, Shape, TextureFilter, TextureHandle, TextureOptions, Ui,
+    Vec2,
 };
 use image::GenericImageView;
 
@@ -12,14 +12,20 @@ pub(crate) struct NineSliceCache {
     pub texture: TextureHandle,
     pub uvs: Vec<Rect>,
     pub destinations: Vec<Rect>,
+    pub shape: Option<Shape>,
 
-    pub is_dirty: bool,
+    pub last_ui_size: Vec2,
 }
 
 impl WidgetState for NineSliceCache {}
 
 impl NineSliceCache {
-    pub fn from_texture(ui: &Ui, texture_file_path: &str, target_area: Rect) -> NineSliceCache {
+    pub fn from_texture(
+        ui: &Ui,
+        texture_file_path: &str,
+        target_area: Rect,
+        last_ui_size: Vec2,
+    ) -> NineSliceCache {
         let texture = load_nine_slice_texture(ui.ctx(), texture_file_path);
 
         let texture_size = texture.size_vec2();
@@ -31,26 +37,10 @@ impl NineSliceCache {
         NineSliceCache {
             texture,
             uvs,
+            shape: None,
             destinations,
-            is_dirty: true,
+            last_ui_size,
         }
-    }
-}
-
-pub(crate) fn draw_nine_slice(
-    ui: &Ui,
-    texture: &TextureHandle,
-    uvs: &[Rect],
-    destinations: &Vec<Rect>,
-    tint: Option<Color32>,
-) {
-    for (uv, destination) in uvs.iter().zip(destinations) {
-        ui.painter().image(
-            texture.id(),
-            *destination,
-            *uv,
-            tint.unwrap_or(Color32::WHITE),
-        );
     }
 }
 
