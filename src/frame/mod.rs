@@ -6,30 +6,25 @@ pub use frame_decoration::{
 use egui::{layers::ShapeIdx, Margin, Rect, Response, Sense, Shape, Ui, UiBuilder};
 
 pub struct Frame<'a> {
-    id_salt: Option<&'a str>,
-    decoration: Option<FrameDecoration<'a>>,
+    id_salt: &'a str,
+    decoration: Option<FrameDecoration>,
     inner_margin: Margin,
     outer_margin: Margin,
 }
 
 impl<'a> Frame<'a> {
     pub fn new(
-        decoration: FrameDecoration<'a>,
+        id_salt: &'a str,
+        decoration: FrameDecoration,
         inner_margin: Margin,
         outer_margin: Margin,
     ) -> Self {
         Frame {
-            id_salt: None,
+            id_salt,
             decoration: Some(decoration),
             outer_margin,
             inner_margin,
         }
-    }
-
-    pub fn id_salt(mut self, id_salt: &'a str) -> Self {
-        self.id_salt = Some(id_salt);
-
-        self
     }
 
     pub fn show(&mut self, ui: &mut Ui, inner_content: impl FnOnce(&mut Ui)) -> Response {
@@ -45,7 +40,13 @@ impl<'a> Frame<'a> {
         response
     }
 
-    fn setup_inner_ui(&self, ui: &mut Ui, content: impl FnOnce(&mut Ui)) -> Ui {
+    fn setup_inner_ui(&mut self, ui: &mut Ui, content: impl FnOnce(&mut Ui)) -> Ui {
+        if let Some(FrameDecoration::NineSlice(nine_slice_decoration)) = &self.decoration {
+            let border_size = nine_slice_decoration.texture.size / 4.0;
+
+            self.inner_margin += border_size.x;
+        }
+
         let inner_area = ui.available_rect_before_wrap() - self.inner_margin - self.outer_margin;
         let mut inner_ui = ui.new_child(UiBuilder::new().max_rect(inner_area));
 
@@ -55,12 +56,17 @@ impl<'a> Frame<'a> {
     }
 
     fn paint(&mut self, ui: &mut Ui, where_to_paint: ShapeIdx, area: Rect) {
-        let decoration = self.decoration.take().unwrap_or(FrameDecoration::None); // instead of
-        // resuming, return
-        let shape = decoration.into_shape(ui, area);
-
+        let mut shapes: Vec<Shape> = vec![];
         let painter = ui.painter();
 
-        painter.set(where_to_paint, shape);
+        if let Some(decoration) = self.decoration.take() {
+            let shape = decoration.into_shape(ui, area, self.id_salt);
+
+            shapes.push(shape);
+        }
+
+        for shape in shapes {
+            painter.set(where_to_paint, shape);
+        }
     }
 }
